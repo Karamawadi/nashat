@@ -7,7 +7,7 @@ let book = { title: '', subjects: [] };
 
 export async function loadBook() {
   let base = { subjects: [] };
-  try { const r = await fetch('../library/reference-book.json', { cache: 'no-cache' }); if (r.ok) base = await r.json(); } catch { /* بدون اتصال */ }
+  try { const r = await fetch(new URL('../library/reference-book.json', import.meta.url), { cache: 'no-cache' }); if (r.ok) base = await r.json(); } catch { /* بدون اتصال */ }
   const custom = customBook();
   book = { title: base.title || 'الكتاب المرجعي', subjects: mergeSubjects(custom?.replace ? [] : base.subjects || [], custom?.subjects || []) };
   return book;

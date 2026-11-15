@@ -56,9 +56,9 @@ export async function start(mode) {
     h('div', { class: 'top-actions' },
       G ? h('span', { class: 'xp-pill', id: 'xpPill' }) : null,
       h('button', { class: 'icon-btn', title: 'الصوت', onclick: (e) => { muted = !muted; localStorage.setItem('nashat.muted', muted ? '1' : '0'); e.currentTarget.textContent = muted ? '🔇' : '🔊'; } }, muted ? '🔇' : '🔊'),
-      h('a', { class: 'switch-ui', href: (G ? '../classic/' : '../golden/') + location.hash }, G ? 'الكلاسيكية' : '✦ الذهبية')));
+      h('a', { class: 'switch-ui', href: (G ? '../classic/index.html' : '../golden/index.html') + location.hash }, G ? 'الكلاسيكية' : '✦ الذهبية')));
   const main = h('main', { class: 'page' });
-  const footer = h('footer', { class: 'foot' }, 'منصة نشاط — أنشطة تعليمية تفاعلية وأوراق عمل · ', h('a', { href: '../' }, 'تغيير الواجهة'));
+  const footer = h('footer', { class: 'foot' }, 'منصة نشاط — أنشطة تعليمية تفاعلية وأوراق عمل · ', h('a', { href: '../index.html' }, 'تغيير الواجهة'));
   app.replaceChildren(header, main, footer);
   const setActive = () => header.querySelectorAll('.nav a').forEach((a) => a.classList.toggle('active', location.hash.startsWith(a.dataset.href) && (a.dataset.href !== '#/' || ['', '#/', '#'].includes(location.hash))));
   const updateXP = () => { if (!G) return; const p = store.profile(); const lvl = level(p.xp); $('#xpPill').textContent = `◆ مستوى ${lvl.n} · ${p.xp} XP`; };
@@ -80,7 +80,7 @@ export async function start(mode) {
           h('a', { class: 'btn sm', href: '#/print/' + a.id }, '🖨 طباعة'),
           h('button', { class: 'btn sm', onclick: () => shareDialog(a) }, '🔗 مشاركة'),
           h('button', { class: 'btn sm', onclick: () => { const c = { ...structuredClone(a), id: uid(), title: a.title + ' (نسخة)', plays: 0 }; store.save(c); toast('تم النسخ'); routeAgain(); } }, '⧉ نسخ'),
-          h('button', { class: 'btn sm danger', onclick: () => { if (confirm('حذف «' + a.title + '»؟')) { store.remove(a.id); routeAgain(); } } }, '🗑'),
+          h('button', { class: 'btn sm danger', onclick: () => { ask('حذف «' + a.title + '»؟', () => { store.remove(a.id); routeAgain(); }); } }, '🗑'),
         ] : [
           h('button', { class: 'btn sm', onclick: () => { const c = { ...structuredClone(a), id: uid(), author: 'أنا', plays: 0 }; store.save(c); toast('أُضيف إلى أنشطتك'); go('/edit/' + c.id); } }, '⧉ تعديل نسخة'),
           h('a', { class: 'btn sm', href: '#/print/' + a.id }, '🖨'),
@@ -98,6 +98,8 @@ export async function start(mode) {
   let modalEl = null;
   function modal(content) { closeModal(); modalEl = h('div', { class: 'modal', onclick: (e) => e.target === modalEl && closeModal() }, h('div', { class: 'modal-card' }, h('button', { class: 'modal-x', onclick: closeModal }, '×'), content)); document.body.append(modalEl); }
   function closeModal() { modalEl?.remove(); modalEl = null; }
+  // تأكيد داخل الصفحة (confirm قد يكون معطلاً في بعض بيئات العرض)
+  function ask(msg, onYes) { modal(h('div', {}, h('h3', {}, msg), h('div', { class: 'row' }, h('button', { class: 'btn danger', onclick: () => { closeModal(); onYes(); } }, 'نعم'), h('button', { class: 'btn', onclick: closeModal }, 'إلغاء')))); }
 
   // ---------------- الرئيسية ----------------
   function home() {
@@ -388,7 +390,7 @@ export async function start(mode) {
           h('label', { class: 'lbl' }, 'حجم الخط'), h('input', { type: 'range', min: 12, max: 22, value: 15, oninput: (e) => { opts.fontSize = +e.target.value; refresh(); } }),
           h('label', { class: 'lbl' }, 'التمايز (مستوى الطالب)'), h('select', { class: 'inp', onchange: (e) => { level = e.target.value; refresh(); } }, ['', 'دعم', 'أساسي', 'إثراء'].map((l) => h('option', { value: l }, l || 'بدون'))),
           h('button', { class: 'btn', onclick: refresh }, '🔀 نسخة جديدة (ترتيب مختلف)')] : null,
-        h('button', { class: 'btn primary block', onclick: () => frame.contentWindow.print() }, '🖨️ طباعة / حفظ PDF'),
+        h('button', { class: 'btn primary block', onclick: () => { try { frame.contentWindow.focus(); frame.contentWindow.print(); } catch { /* محظور */ } setTimeout(() => toast('إن لم تظهر نافذة الطباعة: شغّل الموقع عبر الخادم (npm start) أو افتح الصفحة مباشرة', 'warn'), 800); } }, '🖨️ طباعة / حفظ PDF'),
         h('a', { class: 'btn block', href: '#/play/' + act.id }, '▶ تشغيل النشاط')),
       h('div', { class: 'print-preview' }, frame)));
     refresh();
@@ -445,7 +447,7 @@ export async function start(mode) {
         h('div', { class: 'panel' }, h('h3', {}, '🏅 الأوسمة'), h('div', { class: 'badges' }, BADGES.map(([id, icon, name, desc]) => h('div', { class: 'badge' + (p.badges.includes(id) ? ' got' : '') , title: desc }, h('span', {}, icon), h('b', {}, name), h('small', {}, desc)))))),
       h('div', { class: 'panel' }, h('h3', {}, '🎯 نقاط تحتاج مراجعة'), weakList.length ? [h('ul', { class: 'weak' }, weakList.map(([k, n]) => { const [q, a] = k.split('|'); return h('li', {}, `${q} ← `, h('b', {}, a), h('small', {}, ` (×${n})`)); })),
         h('button', { class: 'btn gold', onclick: () => { const a2 = { ...newActivity('quiz'), title: 'مراجعة ذكية لنقاط الضعف', items: weakList.map(([k]) => { const [q, a] = k.split('|'); return { ...blankItem(), prompt: q, answer: a }; }), theme: 'space' }; store.save(a2); go('/play/' + a2.id); } }, '🔁 ابدأ مراجعة ذكية')] : h('p', { class: 'muted' }, 'لا توجد أخطاء متكررة. رائع!')),
-      h('div', { class: 'row' }, h('button', { class: 'btn danger sm', onclick: () => { if (confirm('تصفير التقدّم؟')) { store.saveProfile({ name: p.name, xp: 0, badges: [], history: [] }); routeAgain(); } } }, 'تصفير التقدّم'))));
+      h('div', { class: 'row' }, h('button', { class: 'btn danger sm', onclick: () => { ask('تصفير التقدّم؟', () => { store.saveProfile({ name: p.name, xp: 0, badges: [], history: [] }); routeAgain(); }); } }, 'تصفير التقدّم'))));
     if (hist.length) {
       const g = cv.getContext('2d'); const last = hist.slice(-20); const w = 760 / last.length;
       g.strokeStyle = 'rgba(255,255,255,.15)'; [0, 50, 100].forEach((v) => { const y = 200 - v * 1.8; g.beginPath(); g.moveTo(0, y); g.lineTo(760, y); g.stroke(); });
