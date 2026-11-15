@@ -1,0 +1,5 @@
+/* الواجهة الكلاسيكية: نظيفة، فاتحة، عملية */
+:root{--bg:#f3f5f9;--text:#1f2937;--muted:#6b7280;--link:#2563eb;--bar:#ffffff;--bar-text:#1f2937;--bar-shadow:0 1px 0 #e5e7eb;--hover:#f1f5f9;--nav-active:#e8efff;
+--accent:#2563eb;--on-accent:#fff;--switch-bg:linear-gradient(135deg,#d4a017,#f5d36b);--switch-text:#2a1f00;--border:#e2e6ee;--btn:#fff;--btn-text:#1f2937;--input:#fff;--panel:#fff;--row:#f8fafc;
+--radius:8px;--radius-lg:12px;--shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow:0 8px 24px rgba(0,0,0,.08);--hero:linear-gradient(135deg,#2563eb,#3b82f6);--hero-text:#fff;--thumb:#eef2ff;--stage:#fff;--sw-on:#eef3ff;--toast:#1f2937;--toast-text:#fff}
+.hero .btn:not(.primary){background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.4)}.hero .btn.primary{background:#fff;color:#2563eb}
